@@ -1,0 +1,12 @@
+{
+  "settings.refresh_minutes.label": "Refresh interval",
+  "settings.refresh_minutes.description": "Minutes between automatic GitHub refreshes.",
+  "settings.item_limit.label": "Items per section",
+  "settings.item_limit.description": "Maximum number of issues, pull requests, and notifications loaded per section.",
+  "settings.repositories.label": "Repository filters",
+  "settings.repositories.description": "Optional owner/repository entries. Leave empty to search across every repository visible to your account.",
+  "settings.show_notifications.label": "Load notifications",
+  "settings.show_notifications.description": "Include unread GitHub notifications in the dashboard.",
+  "settings.show_count.label": "Show count",
+  "settings.show_count.description": "Show the combined issue, review-request, and notification count in the bar."
+}

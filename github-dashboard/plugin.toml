@@ -1,0 +1,68 @@
+id = "denunciated/github-dashboard"
+name = "GitHub Dashboard"
+version = "0.1.1"
+plugin_api = 14
+author = "denunciated"
+license = "MIT"
+dependencies = ["gh", "xdg-open"]
+tags = ["bar", "panel", "service", "development", "productivity"]
+icon = "brand-github"
+description = "GitHub issues, pull requests, review requests, and notifications in a Noctalia panel."
+
+[[setting]]
+key = "refresh_minutes"
+type = "int"
+label_key = "settings.refresh_minutes.label"
+description_key = "settings.refresh_minutes.description"
+default = 5
+min = 1
+max = 60
+
+[[setting]]
+key = "item_limit"
+type = "int"
+label_key = "settings.item_limit.label"
+description_key = "settings.item_limit.description"
+default = 20
+min = 5
+max = 100
+
+[[setting]]
+key = "repositories"
+type = "string_list"
+label_key = "settings.repositories.label"
+description_key = "settings.repositories.description"
+default = []
+
+[[setting]]
+key = "show_notifications"
+type = "bool"
+label_key = "settings.show_notifications.label"
+description_key = "settings.show_notifications.description"
+default = true
+
+[[service]]
+id = "github-service"
+entry = "service.luau"
+
+[[widget]]
+id = "github"
+entry = "widget.luau"
+
+  [widget.actions]
+  left = "panel-toggle denunciated/github-dashboard:dashboard"
+
+  [[widget.setting]]
+  key = "show_count"
+  type = "bool"
+  label_key = "settings.show_count.label"
+  description_key = "settings.show_count.description"
+  default = true
+
+[[panel]]
+id = "dashboard"
+entry = "panel.luau"
+width = 620
+height = 680
+placement = "floating"
+position = "center"
