@@ -10,7 +10,7 @@ local function render()
   barWidget.setGlyph("brand-github")
   local showCount = noctalia.getConfig("show_count") == true
   if snapshot.loading then
-    barWidget.setText(showCount and "…" or "")
+    barWidget.setText(showCount and "" or "")
     barWidget.setTooltip("Refreshing GitHub dashboard")
   elseif snapshot.error ~= nil then
     barWidget.setText(showCount and "!" or "")
