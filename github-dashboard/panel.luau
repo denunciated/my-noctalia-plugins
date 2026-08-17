@@ -7,6 +7,7 @@ local snapshot = noctalia.state.get("github_snapshot") or {
 local selectedTab = 0
 local selectedIssueLabel = nil
 local tabs = { "Issues", "Reviews", "My PRs", "Notifications" }
+local sectionKeys = { "issues", "reviewRequests", "myPullRequests", "notifications" }
 
 local function shellQuote(value)
   return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
@@ -97,12 +98,18 @@ end
 local function render()
   local body = {}
   local items = currentItems()
+  local sectionError = (snapshot.sectionErrors or {})[sectionKeys[selectedTab + 1]]
 
   if snapshot.error ~= nil then
     table.insert(body, ui.column({ gap = 10, padding = 16, radius = 10, fill = "error_container" }, {
       ui.label({ text = "GitHub unavailable", fontWeight = "bold", color = "on_error_container" }),
       ui.label({ text = snapshot.error, color = "on_error_container", maxLines = 4 }),
       ui.button({ text = "Open terminal for login", glyph = "terminal-2", onClick = "onLogin", variant = "outline" }),
+    }))
+  elseif sectionError ~= nil and #items == 0 then
+    table.insert(body, ui.column({ gap = 10, padding = 16, radius = 10, fill = "error_container" }, {
+      ui.label({ text = tabs[selectedTab + 1] .. " unavailable", fontWeight = "bold", color = "on_error_container" }),
+      ui.label({ text = sectionError, color = "on_error_container", maxLines = 4 }),
     }))
   elseif snapshot.loading and #items == 0 then
     table.insert(body, ui.column({ align = "center", gap = 10, padding = 28 }, {
@@ -116,6 +123,13 @@ local function render()
       ui.label({ text = "This section currently has no matching GitHub items.", color = "on_surface_variant", textAlign = "center" }),
     }))
   else
+    if sectionError ~= nil then
+      table.insert(body, ui.label({
+        text = "Could not refresh " .. string.lower(tabs[selectedTab + 1]) .. ". Showing previous results.",
+        color = "error",
+        fontSize = 12,
+      }))
+    end
     for index, item in ipairs(items) do table.insert(body, itemRow(item, index)) end
   end
 

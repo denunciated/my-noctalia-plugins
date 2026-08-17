@@ -6,6 +6,7 @@ local snapshot = {
   authenticated = false,
   loading = true,
   error = nil,
+  sectionErrors = {},
   fetchedAt = 0,
   issues = {},
   reviewRequests = {},
@@ -103,24 +104,25 @@ local function finishOne()
   end
 end
 
-local function runJson(command, assign)
+local function runJson(section, command, assign)
   pending += 1
   local accepted = noctalia.runAsync(command, function(result)
     if result.exitCode ~= 0 then
-      snapshot.error = noctalia.string.trim(result.stderr or "GitHub command failed")
+      snapshot.sectionErrors[section] = noctalia.string.trim(result.stderr or "GitHub command failed")
       finishOne()
       return
     end
     local decoded, err = decodeArray(result.stdout)
     if decoded == nil then
-      snapshot.error = err
+      snapshot.sectionErrors[section] = err
     else
+      snapshot.sectionErrors[section] = nil
       assign(decoded)
     end
     finishOne()
   end)
   if not accepted then
-    snapshot.error = "Noctalia could not start the GitHub command."
+    snapshot.sectionErrors[section] = "Noctalia could not start the GitHub command."
     finishOne()
   end
 end
@@ -131,6 +133,7 @@ local function refresh()
   pending = 0
   snapshot.loading = true
   snapshot.error = nil
+  snapshot.sectionErrors = {}
   publish()
 
   if not noctalia.commandExists("gh") then
@@ -156,26 +159,26 @@ local function refresh()
     local qualifier = repoQualifier()
     local fields = "number,title,url,repository,labels,updatedAt,state,author"
 
-    runJson(
+    runJson("issues",
       "gh search issues assignee:@me state:open" .. qualifier ..
       " --limit " .. tostring(limit) .. " --json " .. fields,
       function(items) snapshot.issues = normalizeSearch(items, "issue") end
     )
 
-    runJson(
+    runJson("reviewRequests",
       "gh search prs review-requested:@me state:open" .. qualifier ..
       " --limit " .. tostring(limit) .. " --json " .. fields .. ",isDraft",
       function(items) snapshot.reviewRequests = normalizeSearch(items, "review") end
     )
 
-    runJson(
+    runJson("myPullRequests",
       "gh search prs author:@me state:open" .. qualifier ..
       " --limit " .. tostring(limit) .. " --json " .. fields .. ",isDraft",
       function(items) snapshot.myPullRequests = normalizeSearch(items, "pull") end
     )
 
     if noctalia.getConfig("show_notifications") == true then
-      runJson(
+      runJson("notifications",
         "gh api notifications --method GET --paginate -f per_page=" .. tostring(limit),
         function(items) snapshot.notifications = normalizeNotifications(items) end
       )
