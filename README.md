@@ -7,7 +7,7 @@ GitHub Dashboard adds assigned issues, requested pull-request reviews, your open
 Add the GitHub Dashboard source by Left-clicking the **Add Source** button in Noctalia's **Sources** tab or by running the following.
 
 ```sh
-noctalia msg plugins source add github-dashboard git https://github.com/denunciated/noctalia-github-dashboard.git
+noctalia msg plugins source add github-dashboard git https://github.com/denunciated/my-noctalia-plugins.git
 ```
 
 Then open **Settings → Plugins**, select the GitHub Dashboard source, and enable **GitHub Dashboard**. It will also be available from the command line:
