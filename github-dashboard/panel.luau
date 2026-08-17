@@ -7,6 +7,7 @@ local snapshot = noctalia.state.get("github_snapshot") or {
 local selectedTab = 0
 local selectedIssueLabel = nil
 local tabs = { "Issues", "Reviews", "My PRs", "Notifications" }
+local tabIcons = { "circle-dot", "code", "git-pull-request", "bell" }
 local sectionKeys = { "issues", "reviewRequests", "myPullRequests", "notifications" }
 
 local function shellQuote(value)
@@ -142,6 +143,7 @@ local function render()
     local tabIndex = i - 1
     table.insert(tabButtons, ui.button({
       key = "tab-" .. tostring(tabIndex),
+      glyph = tabIcons[i],
       text = label .. " " .. tostring(counts[i]),
       controlSize = "sm",
       selected = selectedTab == tabIndex,

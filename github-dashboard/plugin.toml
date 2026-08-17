@@ -1,6 +1,6 @@
 id = "denunciated/github-dashboard"
 name = "GitHub Dashboard"
-version = "0.2.1"
+version = "0.2.2"
 plugin_api = 14
 author = "denunciated"
 license = "MIT"
