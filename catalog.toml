@@ -1,0 +1,12 @@
+[[plugin]]
+id = "denunciated/github-dashboard"
+name = "GitHub Dashboard"
+version = "0.2.1"
+updated_at = 0
+added_at = 0
+author = "denunciated"
+license = "MIT"
+icon = "brand-github"
+description = "GitHub issues, pull requests, review requests, and notifications in a Noctalia panel."
+plugin_api = 14
+tags = ["bar", "panel", "service", "development", "productivity"]
