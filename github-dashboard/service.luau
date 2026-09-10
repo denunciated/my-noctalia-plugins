@@ -62,6 +62,7 @@ local function normalizeSearch(items, kind)
       isDraft = item.isDraft == true,
       author = type(item.author) == "table" and (item.author.login or "") or "",
       labels = item.labels or {},
+      repos = item.repo or {},
     })
   end
   return out

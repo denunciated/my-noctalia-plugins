@@ -6,6 +6,7 @@ local snapshot = noctalia.state.get("github_snapshot") or {
 }
 local selectedTab = 0
 local selectedIssueLabel = nil
+local selectedIssueRepo = nil
 local tabs = { "Issues", "Reviews", "My PRs", "Notifications" }
 local tabIcons = { "circle-dot", "code", "git-pull-request", "bell" }
 local sectionKeys = { "issues", "reviewRequests", "myPullRequests", "notifications" }
@@ -28,6 +29,11 @@ local function itemHasLabel(item, wanted)
   return false
 end
 
+local function itemHasRepo(item, wanted)
+  if wanted == nil then return true end
+  return (item.repo or "") == wanted
+end
+
 local function issueLabels()
   local seen = {}
   local labels = {}
@@ -44,11 +50,27 @@ local function issueLabels()
   return labels
 end
 
+local function issueRepos()
+    local seen = {}
+    local repos = {}
+    for _, item in ipairs(snapshot.issues or {}) do
+        local repo = item.repo or ""
+        if repo ~= "" and not seen[repo] then
+            seen[repo] = true
+            table.insert(repos, repo)
+        end
+    end
+    table.sort(repos, function(a, b)
+        return string.lower(a) < string.lower(b)
+    end)
+    return repos
+end
+
 local function currentItems()
   if selectedTab == 0 then
     local filtered = {}
     for _, item in ipairs(snapshot.issues or {}) do
-      if itemHasLabel(item, selectedIssueLabel) then table.insert(filtered, item) end
+      if itemHasLabel(item, selectedIssueLabel) and itemHasRepo(item, selectedIssueRepo) then table.insert(filtered, item) end
     end
     return filtered
   end
@@ -168,22 +190,45 @@ local function render()
     ui.row({ gap = 4, align = "center" }, tabButtons),
     selectedTab == 0 and (function()
       local labels = issueLabels()
-      local options = { "All labels" }
+      local repos = issueRepos()
+      local labelsOptions = { "All labels" }
       local selectedIndex = 0
+      local repoOptions = { "All repositories" }
+      local selectedRepoIndex = 0
 
       for index, label in ipairs(labels) do
-        table.insert(options, label)
+        table.insert(labelsOptions, label)
         if selectedIssueLabel == label then selectedIndex = index end
       end
 
+      for index, repo in ipairs(repos) do
+        table.insert(repoOptions, repo)
+        if selectedIssueRepo == repo then selectedRepoIndex = index end
+      end
+
       return ui.row({ gap = 10, align = "center" }, {
+        ui.label({ text = "Repository", color = "on_surface_variant", fontWeight = "medium" }),
+        ui.select({
+            key = "issue-repo-filter",
+            options = repoOptions,
+            selectedIndex = selectedRepoIndex,
+            controlSize = "sm",
+            width = 210,
+            onChange = function(index, _text)
+                local value = tonumber(index) or 0
+                selectedIssueRepo =
+                    value == 0 and nil or repos[value]
+
+                render()
+            end,
+        }),
         ui.label({ text = "Label", color = "on_surface_variant", fontWeight = "medium" }),
         ui.select({
           key = "issue-label-filter",
-          options = options,
+          options = labelsOptions,
           selectedIndex = selectedIndex,
           controlSize = "sm",
-          width = 240,
+          width = 150,
           onChange = function(index, _text)
             local value = tonumber(index) or 0
             selectedIssueLabel = value == 0 and nil or labels[value]
