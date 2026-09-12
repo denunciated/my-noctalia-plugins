@@ -50,33 +50,75 @@ local function issueLabels()
   return labels
 end
 
-local function issueRepos()
+local function availableRepos()
     local seen = {}
     local repos = {}
-    for _, item in ipairs(snapshot.issues or {}) do
-        local repo = item.repo or ""
-        if repo ~= "" and not seen[repo] then
-            seen[repo] = true
-            table.insert(repos, repo)
+
+    local function collect(items)
+        for _, item in ipairs(items or {}) do
+            local repo = item.repo or ""
+
+            if repo ~= "" and not seen[repo] then
+                seen[repo] = true
+                table.insert(repos, repo)
+            end
         end
     end
+
+    if selectedTab == 0 then
+        collect(snapshot.issues)
+    elseif selectedTab == 1 then
+        collect(snapshot.reviewRequests)
+    elseif selectedTab == 2 then
+        collect(snapshot.myPullRequests)
+    end
+
     table.sort(repos, function(a, b)
         return string.lower(a) < string.lower(b)
     end)
+
     return repos
 end
 
 local function currentItems()
-  if selectedTab == 0 then
-    local filtered = {}
-    for _, item in ipairs(snapshot.issues or {}) do
-      if itemHasLabel(item, selectedIssueLabel) and itemHasRepo(item, selectedIssueRepo) then table.insert(filtered, item) end
+    if selectedTab == 0 then
+        local filtered = {}
+
+        for _, item in ipairs(snapshot.issues or {}) do
+            if itemHasLabel(item, selectedIssueLabel)
+                and itemHasRepo(item, selectedIssueRepo) then
+                table.insert(filtered, item)
+            end
+        end
+
+        return filtered
     end
-    return filtered
-  end
-  if selectedTab == 1 then return snapshot.reviewRequests or {} end
-  if selectedTab == 2 then return snapshot.myPullRequests or {} end
-  return snapshot.notifications or {}
+
+    if selectedTab == 1 then
+        local filtered = {}
+
+        for _, item in ipairs(snapshot.reviewRequests or {}) do
+            if itemHasRepo(item, selectedIssueRepo) then
+                table.insert(filtered, item)
+            end
+        end
+
+        return filtered
+    end
+
+    if selectedTab == 2 then
+        local filtered = {}
+
+        for _, item in ipairs(snapshot.myPullRequests or {}) do
+            if itemHasRepo(item, selectedIssueRepo) then
+                table.insert(filtered, item)
+            end
+        end
+
+        return filtered
+    end
+
+    return snapshot.notifications or {}
 end
 
 local function subtitle(item)
@@ -156,7 +198,7 @@ local function render()
 
     for index, item in ipairs(items) do table.insert(body, itemRow(item, index)) end end
 
-  local repos = issueRepos()
+  local repos = availableRepos()
   local repoOptions = { "All repositories" }
   local selectedRepoIndex = 0
 
@@ -223,10 +265,7 @@ local function render()
         width = 210,
         onChange = function(index, _text)
           local value = tonumber(index) or 0
-
-          selectedIssueRepo =
-              value == 0 and nil or repos[value]
-
+          selectedIssueRepo = value == 0 and nil or repos[value]
           render()
         end,
       }))
