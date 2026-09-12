@@ -153,16 +153,32 @@ local function render()
         fontSize = 12,
       }))
     end
-    for index, item in ipairs(items) do table.insert(body, itemRow(item, index)) end
+
+    for index, item in ipairs(items) do table.insert(body, itemRow(item, index)) end end
+
+  local repos = issueRepos()
+  local repoOptions = { "All repositories" }
+  local selectedRepoIndex = 0
+
+  for index, repo in ipairs(repos) do
+    table.insert(repoOptions, repo)
+
+    if selectedIssueRepo == repo then
+      selectedRepoIndex = index
+    end
   end
 
   local tabButtons = {}
   local counts = {
-    #(snapshot.issues or {}), #(snapshot.reviewRequests or {}),
-    #(snapshot.myPullRequests or {}), #(snapshot.notifications or {}),
+    #(snapshot.issues or {}),
+    #(snapshot.reviewRequests or {}),
+    #(snapshot.myPullRequests or {}),
+    #(snapshot.notifications or {}),
   }
+
   for i, label in ipairs(tabs) do
     local tabIndex = i - 1
+
     table.insert(tabButtons, ui.button({
       key = "tab-" .. tostring(tabIndex),
       glyph = tabIcons[i],
@@ -170,7 +186,7 @@ local function render()
       controlSize = "sm",
       selected = selectedTab == tabIndex,
       variant = selectedTab == tabIndex and "primary" or "ghost",
-      onClick = function() selectedTab = tabIndex; render() end,
+      onClick = function() selectedTab = tabIndex render() end,
     }))
   end
 
@@ -187,43 +203,50 @@ local function render()
       ui.button({ glyph = "refresh", tooltip = "Refresh", onClick = "onRefresh", variant = "ghost" }),
       ui.button({ glyph = "close", tooltip = "Close", onClick = "onCloseClicked", variant = "ghost" }),
     }),
+
     ui.row({ gap = 4, align = "center" }, tabButtons),
-    selectedTab == 0 and (function()
-      local labels = issueLabels()
-      local repos = issueRepos()
-      local labelsOptions = { "All labels" }
-      local selectedIndex = 0
-      local repoOptions = { "All repositories" }
-      local selectedRepoIndex = 0
 
-      for index, label in ipairs(labels) do
-        table.insert(labelsOptions, label)
-        if selectedIssueLabel == label then selectedIndex = index end
-      end
+    selectedTab ~= 3 and (function()
+      local filters = {}
 
-      for index, repo in ipairs(repos) do
-        table.insert(repoOptions, repo)
-        if selectedIssueRepo == repo then selectedRepoIndex = index end
-      end
+      table.insert(filters, ui.label({
+        text = "Repository",
+        color = "on_surface_variant",
+        fontWeight = "medium",
+      }))
 
-      return ui.row({ gap = 10, align = "center" }, {
-        ui.label({ text = "Repository", color = "on_surface_variant", fontWeight = "medium" }),
-        ui.select({
-            key = "issue-repo-filter",
-            options = repoOptions,
-            selectedIndex = selectedRepoIndex,
-            controlSize = "sm",
-            width = 210,
-            onChange = function(index, _text)
-                local value = tonumber(index) or 0
-                selectedIssueRepo =
-                    value == 0 and nil or repos[value]
+      table.insert(filters, ui.select({
+        key = "issue-repo-filter",
+        options = repoOptions,
+        selectedIndex = selectedRepoIndex,
+        controlSize = "sm",
+        width = 210,
+        onChange = function(index, _text)
+          local value = tonumber(index) or 0
 
-                render()
-            end,
-        }),
-        ui.label({ text = "Label", color = "on_surface_variant", fontWeight = "medium" }),
-        ui.select({
+          selectedIssueRepo =
+              value == 0 and nil or repos[value]
+
+          render()
+        end,
+      }))
+
+      if selectedTab == 0 then
+        local labels = issueLabels()
+        local labelsOptions = { "All labels" }
+        local selectedIndex = 0
+
+        for index, label in ipairs(labels) do
+          table.insert(labelsOptions, label)
+
+          if selectedIssueLabel == label then
+            selectedIndex = index
+          end
+        end
+
+        table.insert(filters, ui.label({ text = "Label", color = "on_surface_variant", fontWeight = "medium", }))
+
+        table.insert(filters, ui.select({
           key = "issue-label-filter",
           options = labelsOptions,
           selectedIndex = selectedIndex,
@@ -231,20 +254,31 @@ local function render()
           width = 150,
           onChange = function(index, _text)
             local value = tonumber(index) or 0
-            selectedIssueLabel = value == 0 and nil or labels[value]
+
+            selectedIssueLabel =
+                value == 0 and nil or labels[value]
+
             render()
           end,
-        }),
-        ui.label({
-          text = tostring(#items) .. " shown",
-          color = "on_surface_variant",
-          fontSize = 12,
-          flexGrow = 1,
-          textAlign = "right",
-        }),
-      })
+        }))
+      end
+
+      table.insert(filters, ui.label({
+        text = tostring(#items) .. " shown",
+        color = "on_surface_variant",
+        fontSize = 12,
+        flexGrow = 1,
+        textAlign = "right",
+      }))
+
+      return ui.row({
+        gap = 10,
+        align = "center"
+      }, filters)
     end)() or ui.column({}, {}),
+
     ui.separator({ spacing = 2 }),
+
     ui.scroll({ flexGrow = 1, gap = 8 }, body),
   }))
 end
