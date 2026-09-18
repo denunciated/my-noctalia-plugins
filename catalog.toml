@@ -1,7 +1,7 @@
 [[plugin]]
 id = "denunciated/github-dashboard"
 name = "GitHub Dashboard"
-version = "0.3.0"
+version = "0.3.3"
 updated_at = 0
 added_at = 0
 author = "denunciated"
